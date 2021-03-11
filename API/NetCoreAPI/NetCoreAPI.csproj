@@ -11,8 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="AuthHelp\MyTokenValidata.cs" />
-    <Compile Remove="AuthHelp\TokenAuth.cs" />
+    <Compile Remove="Common\AuthHelp\MyTokenValidata.cs" />
+    <Compile Remove="Common\AuthHelp\TokenAuth.cs" />
   </ItemGroup>
 
   <ItemGroup>

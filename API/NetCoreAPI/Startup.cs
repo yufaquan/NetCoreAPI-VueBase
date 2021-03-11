@@ -26,6 +26,7 @@ using Microsoft.OpenApi.Models;
 using NetCoreAPI.AuthHelp;
 using Senparc.CO2NET;
 using Senparc.CO2NET.RegisterServices;
+using Senparc.WebSocket;
 using Senparc.Weixin;
 using Senparc.Weixin.Entities;
 using Senparc.Weixin.MP.Containers;
@@ -57,7 +58,6 @@ namespace NetCoreAPI
             Commons.Config.RedisConnectionString = Appsettings.app(new string[] { "Config", "RedisConnectionString" });
             Commons.Config.CorsUrl = Appsettings.app(new string[] { "Config", "CorsUrl" }).ToList(',');
             #endregion
-
 
             services.AddControllers();
             
@@ -274,7 +274,12 @@ namespace NetCoreAPI
             #region 微信模块
             services.AddSenparcGlobalServices(Configuration)//Senparc.CO2NET 全局注册
                     .AddSenparcWeixinServices(Configuration);//Senparc.Weixin 注册
+            //退款的证书地址
             services.AddCertHttpClient("1603559615" + "_", "1603559615", "C:\\WeChat\\chicface\\apiclient_cert.p12");
+            //Senparc.WebSocket 注册（按需）
+            services.AddSenparcWebSocket<WXOpenSocketMessageHandler>();
+            
+
             #endregion
 
 
@@ -299,7 +304,7 @@ namespace NetCoreAPI
 
             app.UseRouting();
 
-            //跨域
+            #region 配置跨域
             app.UseCors("allCors");
 
             app.UseAuthorization();
@@ -312,7 +317,8 @@ namespace NetCoreAPI
                     context.Response.Redirect("/swagger");
                     return Task.CompletedTask;
                 });
-            });
+            }); 
+            #endregion
 
             #region 微信模块
             // 启动 CO2NET 全局注册，必须！
@@ -340,6 +346,7 @@ namespace NetCoreAPI
             });
             #endregion
 
+            #region 配置静态文件路径
             //获取当前程序运行的路径
             dynamic type = new Program().GetType();
             string basePath = Path.GetDirectoryName(type.Assembly.Location);
@@ -350,6 +357,15 @@ namespace NetCoreAPI
                 FileProvider = new PhysicalFileProvider(StaticFilePath),
                 RequestPath = "/StaticFiles",
             });
+            #endregion
+
+            #region 使用SignalR
+            //使用 SignalR
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHub<YvanHub>("/yvanHub");
+            }); 
+            #endregion
 
         }
     }
